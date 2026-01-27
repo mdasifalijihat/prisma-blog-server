@@ -1,0 +1,4 @@
+enum CommentStats {
+  APPROVED
+  REJECT
+}
