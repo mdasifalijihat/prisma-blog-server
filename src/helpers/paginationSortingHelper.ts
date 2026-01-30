@@ -33,7 +33,7 @@ const paginationSortingHelper = (options: IOptions): IOptionsResult => {
   const skip = (page - 1) * limit;
 
   const allowedSortBy: (keyof Prisma.PostOrderByWithRelationInput)[] = [
-    "createAt",
+    "createdAt",
     "updatedAt",
     "title",
     "views",
@@ -43,7 +43,7 @@ const paginationSortingHelper = (options: IOptions): IOptionsResult => {
     options.sortBy as keyof Prisma.PostOrderByWithRelationInput,
   )
     ? (options.sortBy as keyof Prisma.PostOrderByWithRelationInput)
-    : "createAt";
+    : "createdAt";
 
   const sortOrder: Prisma.SortOrder =
     options.sortOrder === "asc" ? "asc" : "desc";

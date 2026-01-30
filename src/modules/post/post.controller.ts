@@ -20,6 +20,8 @@ const createPost = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+
+// Get all Posts with filters, pagination, sorting
 const getAllPost = async (req: Request, res: Response) => {
   try {
     const { search } = req.query;
@@ -35,8 +37,6 @@ const getAllPost = async (req: Request, res: Response) => {
           ? false
           : undefined
       : undefined;
-
-   
 
     const status = req.query.status as PostStatus | undefined;
 
@@ -67,13 +67,15 @@ const getAllPost = async (req: Request, res: Response) => {
   }
 };
 
+
+// Get Post by Id
 const getPostById = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
     if (!postId) {
       throw new Error("Post Id is required!");
     }
-    const result = await postService.getPostById(postId);
+    const result = await postService.getPostById(postId as string);
     res.status(200).json(result);
   } catch (e) {
     res.status(400).json({

@@ -1,13 +1,14 @@
 import {
+  CommentStats,
   Post,
   PostStatus,
-  CommentStatus,
 } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+// import { prisma } from "../../lib/prisma";
 
 const createPost = async (
-  data: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
+  data: Omit<Post, "id" | "createAt" | "updatedAt" | "authorId">,
   userId: string,
 ) => {
   const result = await prisma.post.create({
@@ -19,7 +20,7 @@ const createPost = async (
   return result;
 };
 
-// get all posts with filters, pagination, sorting
+// get all Post with filters, pagination, sorting
 
 const getAllPost = async ({
   search,
@@ -70,7 +71,7 @@ const getAllPost = async ({
     });
   }
 
-  if (tags && tags.length > 0) {
+  if (tags.length > 0) {
     andConditions.push({
       tags: {
         hasEvery: tags as string[],
@@ -97,13 +98,15 @@ const getAllPost = async ({
   }
 
   const allPost = await prisma.post.findMany({
+    where: andConditions.length > 0 ? { AND: andConditions } : {},
     take: limit,
     skip,
-    where: {
-      AND: andConditions,
-    },
+    // where: {
+    //   AND: andConditions,
+    // },
     orderBy: {
-      [sortBy || "createdAt"]: sortOrder === "asc" ? "asc" : "desc",
+      // [sortBy]: sortOrder
+      createAt: sortOrder === "asc" ? "asc" : "desc",
     },
     include: {
       _count: {
@@ -113,9 +116,10 @@ const getAllPost = async ({
   });
 
   const total = await prisma.post.count({
-    where: {
-      AND: andConditions,
-    },
+    where: andConditions.length > 0 ? { AND: andConditions } : {},
+    // where: {
+    //   AND: andConditions,
+    // },
   });
   return {
     data: allPost,
@@ -127,8 +131,6 @@ const getAllPost = async ({
     },
   };
 };
-
-// get by id and increment views
 
 const getPostById = async (postId: string) => {
   return await prisma.$transaction(async (tx) => {
@@ -150,21 +152,21 @@ const getPostById = async (postId: string) => {
         comments: {
           where: {
             parentId: null,
-            status: CommentStatus.APPROVED,
+            status: CommentStats.APPROVED,
           },
-          orderBy: { createdAt: "desc" },
+          orderBy: { createAt: "desc" },
           include: {
             replies: {
               where: {
-                status: CommentStatus.APPROVED,
+                status: CommentStats.APPROVED,
               },
-              orderBy: { createdAt: "asc" },
+              orderBy: { createAt: "asc" },
               include: {
                 replies: {
                   where: {
-                    status: CommentStatus.APPROVED,
+                    status: CommentStats.APPROVED,
                   },
-                  orderBy: { createdAt: "asc" },
+                  orderBy: { createAt: "asc" },
                 },
               },
             },
@@ -195,7 +197,7 @@ const getMyPosts = async (authorId: string) => {
       authorId,
     },
     orderBy: {
-      createdAt: "desc",
+      createAt: "desc",
     },
     include: {
       _count: {
@@ -307,7 +309,7 @@ const getStats = async () => {
       await tx.post.count({ where: { status: PostStatus.DRAFT } }),
       await tx.post.count({ where: { status: PostStatus.ARCHIVED } }),
       await tx.comment.count(),
-      await tx.comment.count({ where: { status: CommentStatus.APPROVED } }),
+      await tx.comment.count({ where: { status: CommentStats.APPROVED } }),
       await tx.user.count(),
       await tx.user.count({ where: { role: "ADMIN" } }),
       await tx.user.count({ where: { role: "USER" } }),
